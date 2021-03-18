@@ -1,5 +1,5 @@
 I am releasing the source code of JivenJive to allow others to read and come to their own conclusions about what's good or bad about this source to hopefully improve their own ability.
 
-If you want to use any part of the source code, or use any documents that are included in the repo, you must credit me, Andrew N Reinke, as the original author of the source code, or any other document(s).
+It would be greatly appreciated if you credit me when using any part of this source. I do want to state that if you took the entirety of the source, and released my game without crediting me in any way, I am entirely opposed to this.
 
-One particular thing, is that if you want to use the JivenJivelogo.png in something, please contact me!
+However, if you take parts of the source to use in your own project and don't want to credit me, please contact me. But, so long as you credited me, I have no problem if you use my code in any way.
