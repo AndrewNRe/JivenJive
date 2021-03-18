@@ -1,0 +1,5 @@
+Large pages through windows virtual alloc.
+2021 todos
+-Make the code much more robust.
+Things like on the setup of wasapi, don't have so many #if debug checks.
+Also, go back and remove the code duplication!

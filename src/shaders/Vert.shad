@@ -1,0 +1,12 @@
+	~v#version 150
+	
+	in vec3 position;
+	in vec4 incolor;
+	
+	smooth out vec4 vertcolor;
+	
+	void main(void)
+	{
+		vertcolor = incolor;
+		gl_Position = vec4(position, 1);
+	}
