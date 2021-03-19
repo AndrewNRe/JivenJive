@@ -28,4 +28,4 @@ And you're good to go!
 If you have any bugs / issues, please DM or tweet me on twitter @AndrewNReinke, or email me at andrewnereinke@gmail.com!
 
 Gameplay:
-The game auto cycles the emotional spectrum, so all you can do is pause the game with the controller!
+The game auto cycles the 'emotional spectrum', so all you can do is pause the game with the controller!

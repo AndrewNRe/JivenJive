@@ -181,41 +181,30 @@ void platform_WINDOWS_gl_functions_load()
 #endif
 }
 
-
-GLuint compileshader(const char* filepath, void* file_io_memory)
+enum GL_ShaderType
 {
-    bit32 bytesread = platform_fileload(filepath, file_io_memory);
-    ((bit8*)file_io_memory)[bytesread] = 0;
-    bit8 c = 0; GLuint shader = 0; s8* filedata = nullptr;
-    for (bit16 i = 0; i < bytesread; i++)
+    GL_Vertex,
+    GL_Fragment,
+};
+
+GLuint compileshader(char* shadersource, GL_ShaderType Type)
+{
+    bit8 c = 0; GLuint shader = 0;
+    
+    switch(Type)
     {
-        c = ((bit8*)file_io_memory)[i];
-        if (c == '~')
+        case GL_Vertex:
         {
-            c = ((bit8*)file_io_memory)[i + 1];
-            switch (c)
-            {
-                case 'v':
-                shader = glCreateShader(GL_VERTEX_SHADER);
-                break;
-                case 'f':
-                shader = glCreateShader(GL_FRAGMENT_SHADER);
-                break;
-                case 'c':
-                shader = glCreateShader(GL_TESS_CONTROL_SHADER);
-                break;
-                case 'e':
-                shader = glCreateShader(GL_TESS_EVALUATION_SHADER);
-                break;
-            }
-            filedata = &((s8*)file_io_memory)[i + 2];
-            break;
-        }
+            shader = glCreateShader(GL_VERTEX_SHADER);
+        }break;
+        case GL_Fragment:
+        {
+            shader = glCreateShader(GL_FRAGMENT_SHADER);
+        }break;
     }
     
-    const char* GLconstcharstuff[1] = { (const char*)filedata };
-    
-    glShaderSource(shader, 1, (char**)GLconstcharstuff, NULL);
+    GLchar* glshadersource[] = {shadersource};
+    glShaderSource(shader, 1, glshadersource, NULL);
     glCompileShader(shader);
     
 #if debug

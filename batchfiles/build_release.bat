@@ -7,7 +7,7 @@ del /s JivenJive_Windows.obj
 del /s JivenJive_Windows.pdb
 del /s vc140.pdb
 @echo START COMPILATION: %time%
-cl /c /utf-8 /Oi /W4 /MTd /I c:\JivenJive\src /I c:\JivenJive\src\vendor c:\JivenJive\src\JivenJive_Windows.cpp
-link  /incremental:no /OPT:REF JivenJive_Windows.obj kernel32.Lib User32.Lib Opengl32.lib Gdi32.lib Mincore.lib hid.lib Winmm.lib Ole32.lib
+cl /c /utf-8 /Oi /W4 /LD /MTd /I c:\JivenJive\src /I c:\JivenJive\src\vendor c:\JivenJive\src\JivenJive_Windows.cpp
+link  /incremental:no /OPT:REF /SUBSYSTEM:windows JivenJive_Windows.obj kernel32.Lib User32.Lib Opengl32.lib Gdi32.lib Mincore.lib hid.lib Winmm.lib Ole32.lib
 popd
 @echo END COMPILATION: %time%

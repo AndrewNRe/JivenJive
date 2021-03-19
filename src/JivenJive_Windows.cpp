@@ -931,10 +931,32 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, WINDOWS_OPENGL_STREAM_INDEX_BUFFER);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, WINDOWS_OPENGL_MAXINDEXBUFFERSIZE,  nullptr, GL_DYNAMIC_DRAW);
             WINDOWS_OPENGL_BASIC_SHADER = glCreateProgram();
-            void* fileio = (void*)stackpush(Kilobytes(2));
-            GLuint vs = compileshader("src/shaders/Vert.shad", fileio);
-            GLuint fs = compileshader("src/shaders/Frag.shad", fileio);
-            stackpop(Kilobytes(2));
+            GLuint vs = compileshader(R"FOO(
+                                      #version 150
+                                      
+                                      in vec3 position;
+                                      in vec4 incolor;
+                                      
+                                      smooth out vec4 vertcolor;
+                                      
+                                      void main(void)
+                                      {
+                                      vertcolor = incolor;
+                                      gl_Position = vec4(position, 1);
+                                      }
+                                      )FOO", GL_Vertex);
+            GLuint fs = compileshader(R"FOO(
+                                      #version 150
+                                      
+                                      in vec4 vertcolor;
+                                      
+                                      out vec4 color;
+                                      
+                                      void main(void)
+                                      {
+                                      color = vertcolor;
+                                      }
+                                      )FOO", GL_Fragment);
             glAttachShader(WINDOWS_OPENGL_BASIC_SHADER, vs);
             glAttachShader(WINDOWS_OPENGL_BASIC_SHADER, fs);
             glDeleteShader(vs);
@@ -956,17 +978,115 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
             stackpop(Kilobytes(40000));
         }
         {//Setup GL shaders 
-            void* file_io_memory = (void*)stackpush(Kilobytes(3));
             debug_printf.prntfProgram = glCreateProgram();
-            GLuint vs = compileshader("src/shaders/PrintfVert.shad", file_io_memory);
-            GLuint fs = compileshader("src/shaders/PrintfFrag.shad", file_io_memory);
+            GLuint vs = compileshader(R"FOO(
+                                      #version 450 core
+                                      
+                                      layout (location = 0) uniform uint innumberofvertexes;
+                                      layout (location = 1) uniform float inbaseline;
+                                      
+                                      flat out uint numberofvertexes;	
+                                      out vec2 samplecoords;
+                                      out float baseline;
+                                      
+                                      void main(void)
+                                      {
+                                      const vec4 fullscreenquad[6] = vec4[](
+                                      vec4(-1, -1, 0, 1), vec4(1, -1, 0, 1), vec4(-1, 1, 0, 1),
+                                      vec4(1, -1, 0, 1), vec4(1, 1, 0, 1), vec4(-1, 1, 0, 1)
+                                      );
+                                      
+                                      vec2 texcoords[6] = vec2[](
+                                      vec2(0, 0), vec2(1, 0), vec2(0, 1),
+                                      vec2(1, 0), vec2(1, 1), vec2(0, 1)
+                                      );
+                                      
+                                      samplecoords = texcoords[gl_VertexID];
+                                      numberofvertexes = innumberofvertexes;
+                                      baseline = inbaseline;
+                                      gl_Position = fullscreenquad[gl_VertexID];
+                                      )FOO", GL_Vertex);
+            GLuint fs = compileshader(R"FOO(
+                                      #version 450 core
+                                      
+                                      out vec4 color;
+                                      
+                                      flat in uint numberofvertexes;
+                                      
+                                      layout (std430, binding = 0) buffer vertexdata
+                                      {
+                                      vec4 vertexbuffer[8192];
+                                      };
+                                      
+                                      in vec2 samplecoords;
+                                      
+                                      in float baseline;
+                                      
+                                      int doesintersect(vec2 a, vec2 b)
+                                      {
+                                      float dx = b.x-a.x;
+                                      float dy = b.y-a.y;
+                                      float A = dy;
+                                      float B = -dx;
+                                      float C = dx * a.y - dy * a.x;
+                                      vec2 ray = vec2(1, 0);
+                                      float t = (-C) / (A * ray.x + B * ray.y);
+                                      vec2 intersect = ray*t;
+                                      
+                                      if(intersect.x >= 0)
+                                      {
+                                      if(a.y >= 0)
+                                      {
+                                      if(b.y <= 0)
+                                      {
+                                      return -1;
+                                      }
+                                      }
+                                      else
+                                      {
+                                      if(b.y >= 0)
+                                      {
+                                      return 1;
+                                      }
+                                      }
+                                      }
+                                      return 0;
+                                      }
+                                      
+                                      void main(void)
+                                      {
+                                      if(samplecoords.y >= baseline)
+                                      {
+                                      int c = 0;
+                                      vec4 currentfirstcontour = vertexbuffer[0];
+                                      for(int i = 0; i < numberofvertexes; i++)
+                                      {
+                                      if(currentfirstcontour.z != vertexbuffer[i].z){ currentfirstcontour = vertexbuffer[i]; }
+                                      
+                                      vec2 s = vertexbuffer[i].xy - samplecoords.xy;
+                                      if(vertexbuffer[i+1].z == vertexbuffer[i].z && i != numberofvertexes-1)
+                                      {
+                                      vec2 e = vertexbuffer[i+1].xy - samplecoords.xy;
+                                      c += doesintersect(s, e);
+                                      }
+                                      else
+                                      {
+                                      vec2 e = currentfirstcontour.xy - samplecoords.xy;
+                                      c += doesintersect(s, e);
+                                      }
+                                      }
+                                      
+                                      if(c != 0){ color = vec4(1, 0, 1, 1); }
+                                      else {color = vec4(0, 0, 0, 0);}
+                                      }
+                                      }
+                                      )FOO", GL_Fragment);
             glAttachShader(debug_printf.prntfProgram, vs);
             glAttachShader(debug_printf.prntfProgram, fs);
             glDeleteShader(vs);
             glDeleteShader(fs);
             glLinkProgram(debug_printf.prntfProgram);
             queryprogramobject(debug_printf.prntfProgram);
-            stackpop(Kilobytes(3));
         }
         {//Setup ssbo for the vertex data buffering!
             glGenBuffers(1, &debug_printf.prntfSSBO);
